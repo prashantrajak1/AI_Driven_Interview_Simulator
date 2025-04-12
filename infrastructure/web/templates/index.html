@@ -1,0 +1,335 @@
+<html>
+    <head>
+        <title>Video Resume Analyzer</title>
+        <style>
+            :root {
+                --navy: #0a192f;
+                --slate: #8892b0;
+                --light-slate: #a8b2d1;
+                --white: #e6f1ff;
+                --teal: #64ffda;
+                --transition: all 0.25s cubic-bezier(0.645,0.045,0.355,1);
+            }
+            
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            body { 
+                font-family: 'Inter', system-ui, -apple-system, sans-serif; 
+                background-color: var(--navy);
+                color: var(--light-slate);
+                min-height: 100vh;
+            }
+            
+            nav {
+                background-color: rgba(10, 25, 47, 0.95);
+                padding: 1.5rem 5%;
+                backdrop-filter: blur(10px);
+                position: fixed;
+                width: 100%;
+                top: 0;
+                z-index: 1000;
+                border-bottom: 1px solid rgba(136, 146, 176, 0.1);
+            }
+
+            .nav-content {
+                max-width: 1200px;
+                margin: 0 auto;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .logo {
+                color: var(--teal);
+                font-weight: 700;
+                font-size: 1.5rem;
+                text-decoration: none;
+            }
+
+            .nav-links {
+                display: flex;
+                gap: 2rem;
+            }
+
+            .nav-links a {
+                color: var(--light-slate);
+                text-decoration: none;
+                font-size: 0.95rem;
+                transition: var(--transition);
+            }
+
+            .nav-links a:hover {
+                color: var(--teal);
+            }
+
+            main {
+                max-width: 800px;
+                margin: 6rem auto 2rem;
+                padding: 0 2rem;
+            }
+
+            h1 {
+                color: var(--white);
+                text-align: center;
+                margin-bottom: 3rem;
+                font-size: 2.5rem;
+            }
+            
+            video { 
+                width: 100%; 
+                border-radius: 8px;
+                background: rgba(17, 34, 64, 0.3); /* Semi-transparent dark blue */
+                box-shadow: 0 10px 30px -10px rgba(2,12,27,0.7);
+                border: 1px solid rgba(100, 255, 218, 0.15);
+                backdrop-filter: blur(4px); /* Frosted glass effect */
+            }
+            
+            .controls {
+                text-align: center;
+                margin: 2rem 0;
+            }
+            
+            button { 
+                padding: 0.8rem 2rem; 
+                font-size: 1rem;
+                margin: 0 1rem; 
+                border-radius: 4px;
+                cursor: pointer;
+                transition: var(--transition);
+                border: 1px solid var(--teal);
+                background: transparent;
+                color: var(--teal);
+                font-weight: 500;
+            }
+            
+            button:hover {
+                background: rgba(100, 255, 218, 0.1);
+                transform: translateY(-2px);
+            }
+            
+            button:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+                border-color: var(--slate);
+                color: var(--slate);
+            }
+
+            #result {
+                margin: 3rem 0;
+            }
+        
+            .loading {
+                text-align: center;
+                padding: 3rem;
+                background: rgba(17, 34, 64, 0.5);
+                border-radius: 8px;
+                margin: 2rem 0;
+            }
+            
+            .spinner {
+                display: inline-block;
+                width: 32px;
+                height: 32px;
+                border: 3px solid rgba(100, 255, 218, 0.2);
+                border-radius: 50%;
+                border-top-color: var(--teal);
+                animation: spin 1s ease-in-out infinite;
+            }
+            
+            .analysis-result {
+                background: rgba(17, 34, 64, 0.3);
+                border-radius: 8px;
+                padding: 2rem;
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(136, 146, 176, 0.1);
+            }
+            
+            .section {
+                margin-bottom: 2rem;
+                padding: 1.5rem;
+                background: rgba(17, 34, 64, 0.2);
+                border-radius: 6px;
+            }
+            
+            .section h4 {
+                color: var(--teal);
+                margin-bottom: 1rem;
+                font-size: 1.1rem;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+            }
+            
+            .metrics {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+                gap: 1.5rem;
+                margin-top: 2rem;
+            }
+
+            .error {
+                background: rgba(255, 80, 80, 0.1);
+                color: #ff5050;
+                padding: 1.5rem;
+                border-radius: 6px;
+                border: 1px solid rgba(255, 80, 80, 0.2);
+                text-align: center;
+            }
+
+            @keyframes spin {
+                to { transform: rotate(360deg); }
+            }
+        </style>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    </head>
+    <body>
+        <nav>
+            <div class="nav-content">
+                <a href="#" class="logo">TalentScan</a>
+                <div class="nav-links">
+                    <a href="#">Home</a>
+                    <a href="#">About</a>
+                    <a href="#">Contact</a>
+                </div>
+            </div>
+        </nav>
+
+        <main>
+            <h1>Video Resume Analysis</h1>
+            <video id="preview" autoplay muted></video>
+            <div class="controls">
+                <button id="startBtn">Start Recording</button>
+                <button id="stopBtn" disabled>Analyze Video</button>
+            </div>
+
+            <div id="result"></div>
+        </main>
+
+        <script>
+            let mediaRecorder, recordedChunks = [];
+            const video = document.getElementById('preview');
+            const startBtn = document.getElementById('startBtn');
+            const stopBtn = document.getElementById('stopBtn');
+
+            startBtn.onclick = async () => {
+                document.getElementById('result').innerHTML = ''; // clear previous results
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        video: true,
+                        audio: true
+                    });
+
+                    video.srcObject = stream;
+
+                    mediaRecorder = new MediaRecorder(stream, {
+                        mimeType: 'video/webm; codecs=vp9'
+                    });
+
+                    recordedChunks = []; // Clear old chucks before starting new recording 
+
+                    mediaRecorder.ondataavailable = e => {
+                        if (e.data.size > 0) {
+                            recordedChunks.push(e.data);
+                        }
+                    };
+
+                    mediaRecorder.onstop = uploadVideo;
+
+                    mediaRecorder.start(1000);
+                    startBtn.disabled = true;
+                    stopBtn.disabled = false;
+
+                } catch (err) {
+                    alert(`Error: ${err.message}`);
+                }
+            };
+
+            stopBtn.onclick = () => {
+                mediaRecorder.stop();
+                video.srcObject.getTracks().forEach(track => track.stop());
+                startBtn.disabled = false;
+                stopBtn.disabled = true;
+            };
+
+            async function uploadVideo() {
+                const resultDiv = document.getElementById('result');
+                try {
+                    const blob = new Blob(recordedChunks, { type: 'video/webm' });
+                    const formData = new FormData();
+                    formData.append('video', blob, 'recording.webm');
+            
+                    resultDiv.innerHTML = '<div class="loading">Analyzing...<div class="spinner"></div></div>';
+            
+                    const response = await fetch('/analyze', {
+                        method: 'POST',
+                        headers: {
+                            'Accept': 'application/json' // Explicitly request JSON
+                        },
+                        body: formData
+                    });
+            
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+            
+                    const contentType = response.headers.get('content-type');
+                    if (!contentType || !contentType.includes('application/json')) {
+                        throw new Error('Invalid response format');
+                    }
+            
+                    const data = await response.json();
+                    
+                    if (data.error) {
+                        throw new Error(data.error);
+                    }
+            
+                    // Display formatted results
+                    resultDiv.innerHTML = formatAnalysis(data);
+            
+                } catch (err) {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            <strong>Error:</strong> ${err.message}
+                            ${err.details ? `<br>Details: ${err.details}` : ''}
+                        </div>
+                    `;
+                    console.error('Analysis failed:', err);
+                }
+            }
+
+            // Helper to format newlines as HTML line breaks
+            //function formatAnalysis(data) {
+            //    return text.replace(/\n/g, '<br>');
+            //} 
+
+            function formatAnalysis(data) {
+                const metricsHTML = data.metrics ? `
+                    <div class="metrics">
+                        ${data.metrics.duration ? `<p><strong>Duration:</strong> ${data.metrics.duration} seconds</p>` : ''}
+                        ${data.metrics.confidence ? `<p><strong>Confidence:</strong> ${data.metrics.confidence}</p>` : ''}
+                        ${data.metrics.speech_rate ? `<p><strong>Speech Rate:</strong> ${data.metrics.speech_rate}</p>` : ''}
+                    </div>
+                ` : '';
+            
+                return `
+                    <div class="analysis-result">
+                        <div class="section">
+                            <h4>Transcript</h4>
+                            <p>${data.transcript.replace(/\n/g, '<br>')}</p>
+                        </div>
+                        <div class="section">
+                            <h4>Analysis</h4>
+                            <p>${data.analysis.replace(/\n/g, '<br>')}</p>
+                        </div>
+                        ${metricsHTML}
+                    </div>
+                `;
+            }
+            
+        </script>
+    </body>
+</html>
