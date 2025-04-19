@@ -18,6 +18,9 @@ class VideoAnalysisUseCase:
         
         print("Analysing audio...")
         analysis = self.ai_service.analyse_transcript(transcript)
+
+        print("Generating graph...")
+        graph_url = self.ai_service.give_graph(transcript)
         
         return VideoAnalysisResult(
             transcript=transcript,

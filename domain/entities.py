@@ -11,4 +11,5 @@ class VideoAnalysisResult(BaseModel): # Data returned by the api
     transcript: str
     analysis: str
     metrics: dict = None
+    graph_url: str = None
     

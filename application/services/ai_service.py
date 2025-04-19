@@ -10,6 +10,8 @@ class AIServiceInterface(ABC): # setting up interface for any AI service to be u
         pass
     def analyse_transcript(self, transcript: str) -> str:
         pass
+    def give_graph(self, transcript: str) -> str:
+        pass
     
 class OpenAIService(AIServiceInterface): # defining blueprint for OpenAI
     def __init__(self, api_key: str):
@@ -45,3 +47,16 @@ class OpenAIService(AIServiceInterface): # defining blueprint for OpenAI
             print("Error occured in analysing transcript : ", str(e))
             pass # Define error and logging
         
+    def give_graph(self, transcript: str) -> str:
+        try:
+            response = self.client.images.generate(
+                model="dall-e-3",
+                prompt=f"Create a bar graph that visually represents this candidate’s skill analysis from a video resume transcript. Highlight soft skills, technical skills, problem-solving, and teamwork based on the following input: {transcript}",
+                n=1,
+                size="1024x1024"
+            )
+            image_url = response.data[0].url
+            return image_url
+        except Exception as e:
+            print("Error occurred while generating graph image:", str(e))
+            return None
