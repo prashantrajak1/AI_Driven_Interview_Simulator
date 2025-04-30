@@ -1,6 +1,7 @@
 <html>
     <head>
         <title>Video Resume Analyzer</title>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <style>
             :root {
                 --navy: #0a192f;
@@ -305,6 +306,43 @@
             //function formatAnalysis(data) {
             //    return text.replace(/\n/g, '<br>');
             //} 
+            async function fetchAndPlot() {
+      const videoId = document.getElementById('videoId').value;
+      const response = await fetch(`/api/analyze-video/${videoId}`);
+      const data = await response.json();
+
+      const skillScores = data.skill_scores;
+
+      const skills = Object.keys(skillScores);
+      const scores = Object.values(skillScores);
+
+      const ctx = document.getElementById('skillChart').getContext('2d');
+
+      // Destroy existing chart if exists
+      if (window.myChart) {
+        window.myChart.destroy();
+      }
+
+      window.myChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: skills,
+          datasets: [{
+            label: 'Skill Score',
+            data: scores,
+            backgroundColor: 'rgba(75, 192, 192, 0.6)'
+          }]
+        },
+        options: {
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: 1
+            }
+          }
+        }
+      });
+    }
 
             function formatAnalysis(data) {
                 const metricsHTML = data.metrics ? `
@@ -325,11 +363,19 @@
                             <h4>Analysis</h4>
                             <p>${data.analysis.replace(/\n/g, '<br>')}</p>
                         </div>
-                        ${metricsHTML}
-                    </div>
+                            <div class="section">
+                            <h4>Graphical Representation</h4>
+                            <p><img src = ${data.graph_url.replace(/\n/g, '<br>')} width = 500px height = 500px ></p>
+                        </div>
+                        
+                        ${metricsHTML} 
+                    </>
                 `;
             }
             
         </script>
     </body>
 </html>
+
+
+

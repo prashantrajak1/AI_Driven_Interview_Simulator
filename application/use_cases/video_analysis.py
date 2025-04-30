@@ -7,6 +7,22 @@ class VideoAnalysisUseCase:
     def __init__(self, ai_service: ai_service, video_service: video_service):
         self.ai_service = ai_service
         self.video_service = video_service
+
+    def extract_skills_from_transcript(transcript):
+        skills = [
+        "Java", "C/C++", "Python", "SQL", "Cloud Computing",
+        "Communication", "Teamwork", "Problem Solving",
+        "Leadership", "Time Management"
+    ]
+
+        skill_scores = []
+        for skill in skills:
+            mentions = transcript.lower().count(skill.lower())
+            score = min(100, mentions * 20)  # Simple scoring logic
+            skill_scores.append({"skill": skill, "score": score})
+
+        return skill_scores
+    
         
     def execute(self, request: VideoAnalysisRequest) -> VideoAnalysisResult:
         print("Extracting audio...")
@@ -24,5 +40,6 @@ class VideoAnalysisUseCase:
         
         return VideoAnalysisResult(
             transcript=transcript,
-            analysis=analysis
+            analysis=analysis,
+            graph_url=graph_url
         )
