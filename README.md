@@ -11,3 +11,17 @@ Steps for implementing this project :
 
 4. Run the application
     python main.py
+
+
+Sample Input
+
+![Input1](image.png)
+
+
+Sample Output
+
+![![Output2](image-2.png)](image-1.png)
+
+![Output2](image-3.png)
+
+
